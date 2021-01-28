@@ -1,5 +1,6 @@
 #  coding: utf-8 
 import socketserver
+import os.path
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 # 
@@ -33,34 +34,49 @@ class MyWebServer(socketserver.BaseRequestHandler):
         self.data = self.request.recv(1024).strip()
         #print ("Got a request of: %s\n" % self.data)
         data = self.data.split()
-        print(data[1])
+        print(data)
         #f = read_index_html("./www")
         #self.request.sendall(f)
-        if data[1].decode("utf-8").split('.')[1] == '.csv':
-            self.good_request_css()
+        if data[1].decode("utf-8") == '/':
+            self.good_request_html(b'/index.html')
+        elif data[1].decode("utf-8") == "favicon.ico":
+            self.request.sendall(bytearray('HTTP/1.1 200 OK\r\n','utf-8'))
+        elif data[1].decode("utf-8") == '/base.css':
+            self.good_request_css(data[1])
         else:
-            self.good_request_html()
+            self.good_request_html(data[1])
 
-    def good_request_html(self):
-        data = self.data.split()
-        f = read_index(data[1])
-        self.request.sendall(bytearray('HTTP/1.1 200 OK\n','utf-8'))
-        self.request.sendall(bytearray('Content-Type: text/html\n','utf-8'))
+    def good_request_html(self,data):
+        f = read_index(data)
+        if f == False:
+            self.bad_request()
+            return
+        self.request.sendall(bytearray('HTTP/1.1 200 OK\r\n','utf-8'))
+        self.request.sendall(bytearray('Content-Type: text/html\r\n','utf-8'))
         self.request.sendall(bytearray(f,'utf-8'))
 
-    def good_request_css(self):
-        data = self.data.split()
-        f = read_index(data[1])
-        self.request.sendall(bytearray('HTTP/1.1 200 OK\n','utf-8'))
-        self.request.sendall(bytearray('Content-Type: text/css\n','utf-8'))
+    def good_request_css(self,data):
+        f = read_index(data)
+        if f == False:
+            self.bad_request()
+            return
+        self.request.sendall(bytearray('HTTP/1.1 200 OK\r\n','utf-8'))
+        self.request.sendall(bytearray('Content-Type: text/css\r\n','utf-8'))
         self.request.sendall(bytearray(f,'utf-8'))
+    
+    def bad_request(self):
+        self.request.sendall(bytearray('HTTP/1.1 404 Not Found\r\n','utf-8'))
 
 def read_index(location):
-    location = '.'+location.decode("utf-8") #append ./www later I think
-    f = open(location, 'r')
-    html = f.read()
-    f.close()
-    return html
+    location = './www'+location.decode("utf-8")
+    print(location)
+    if os.path.isfile(location):
+        f = open(location, 'r')
+        html = f.read()
+        f.close()
+        return html
+    else:
+        return False
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
