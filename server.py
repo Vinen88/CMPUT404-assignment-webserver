@@ -31,16 +31,32 @@ class MyWebServer(socketserver.BaseRequestHandler):
     
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
+        #print ("Got a request of: %s\n" % self.data)
+        data = self.data.split()
+        print(data[1])
         #f = read_index_html("./www")
         #self.request.sendall(f)
-        f = read_index_html("./www")
+        if data[1].decode("utf-8").split('.')[1] == '.csv':
+            self.good_request_css()
+        else:
+            self.good_request_html()
+
+    def good_request_html(self):
+        data = self.data.split()
+        f = read_index(data[1])
         self.request.sendall(bytearray('HTTP/1.1 200 OK\n','utf-8'))
         self.request.sendall(bytearray('Content-Type: text/html\n','utf-8'))
         self.request.sendall(bytearray(f,'utf-8'))
 
-def read_index_html(location):
-    location = location + "/index.html"
+    def good_request_css(self):
+        data = self.data.split()
+        f = read_index(data[1])
+        self.request.sendall(bytearray('HTTP/1.1 200 OK\n','utf-8'))
+        self.request.sendall(bytearray('Content-Type: text/css\n','utf-8'))
+        self.request.sendall(bytearray(f,'utf-8'))
+
+def read_index(location):
+    location = '.'+location.decode("utf-8") #append ./www later I think
     f = open(location, 'r')
     html = f.read()
     f.close()
