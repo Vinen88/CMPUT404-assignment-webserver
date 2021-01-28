@@ -1,5 +1,10 @@
 *.py[cod]
 
+*.pyc
+venv
+env
+.vscode
+
 # C extensions
 *.so
 
