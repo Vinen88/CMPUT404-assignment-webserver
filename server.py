@@ -37,8 +37,12 @@ class MyWebServer(socketserver.BaseRequestHandler):
         print(data)
         #f = read_index_html("./www")
         #self.request.sendall(f)
-        if data[1].decode("utf-8")[-1] == '/':
+        if data[0].decode("utf-8") != 'GET':
+            self.bad_request_method()
+        elif data[1].decode("utf-8")[-1] == '/':
             self.good_request_html(data[1]+(b'index.html'))
+        elif '.css' not in data[1].decode("utf-8") and '.html' not in data[1].decode("utf-8") and data[1].decode("utf-8")[-1] != '/':
+            self.redirect_request(data)
         #if data[1].decode("utf-8") == '/':
         #    print("entered '/' request ")
         #    self.good_request_html(b'/index.html')
@@ -52,6 +56,24 @@ class MyWebServer(socketserver.BaseRequestHandler):
             self.good_request_html(data[1])
         else:
             self.bad_request()
+
+    def redirect_request(self,data):
+        #check if request is valid dir somewhere
+        #add / at the end of whatever dir
+        #send 30- code and correct address
+        f = read_index(data[1]+b'/index.html')
+        if f == False:
+            self.bad_request()
+            return
+        self.request.sendall(bytearray('HTTP/1.1 302 Found\r\n','utf-8'))
+        self.request.sendall(data[6]+data[1]+b'/')
+        self.request.sendall(bytearray('Content-Type: text/html\r\n','utf-8'))
+        self.request.sendall(bytearray(f,'utf-8'))
+
+        
+    def bad_request_method(self):
+        self.request.sendall(bytearray('HTTP/1.1 405 Method not allowed\r\n','utf-8'))
+        self.request.sendall(bytearray('Connection: close\r\n', 'utf-8'))
 
     def good_request_html(self,data):
         f = read_index(data)
