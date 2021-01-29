@@ -38,11 +38,15 @@ class MyWebServer(socketserver.BaseRequestHandler):
         #f = read_index_html("./www")
         #self.request.sendall(f)
         if data[1].decode("utf-8") == '/':
+            print("entered '/' request ")
             self.good_request_html(b'/index.html')
         elif data[1].decode("utf-8") == "favicon.ico":
             self.request.sendall(bytearray('HTTP/1.1 200 OK\r\n','utf-8'))
-        elif data[1].decode("utf-8") == '/base.css':
-            self.good_request_css(data[1])
+        try: #I #1 coder (I'm so sorry for doing this, I hope I have time to do it right)
+            if data[1].decode("utf-8").split('.')[1] == 'css':
+                self.good_request_css(data[1])
+        except:
+            pass
         else:
             self.good_request_html(data[1])
 
@@ -65,7 +69,9 @@ class MyWebServer(socketserver.BaseRequestHandler):
         self.request.sendall(bytearray(f,'utf-8'))
     
     def bad_request(self):
+        print("BAD REQUEST")
         self.request.sendall(bytearray('HTTP/1.1 404 Not Found\r\n','utf-8'))
+        self.request.sendall(bytearray('Connection: close\r\n', 'utf-8'))
 
 def read_index(location):
     location = './www'+location.decode("utf-8")
@@ -76,6 +82,7 @@ def read_index(location):
         f.close()
         return html
     else:
+        print("BAD REQUEST IN READ INDEX")
         return False
 
 if __name__ == "__main__":
