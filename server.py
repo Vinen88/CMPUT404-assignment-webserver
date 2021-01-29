@@ -48,7 +48,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
             self.good_request_html(data[1])
         else:
             self.bad_request()
-
+    
+    #redirects client
     def redirect_request(self,data):
         #check if request is valid dir somewhere
         #add / at the end of whatever dir
@@ -62,11 +63,12 @@ class MyWebServer(socketserver.BaseRequestHandler):
         self.request.sendall(bytearray('Content-Type: text/html\r\n','utf-8'))
         self.request.sendall(bytearray(f,'utf-8'))
 
-        
+    #sends 405 if anything other than GET is used to on sever    
     def bad_request_method(self):
         self.request.sendall(bytearray('HTTP/1.1 405 Method not allowed\r\n','utf-8'))
         self.request.sendall(bytearray('Connection: close\r\n', 'utf-8'))
 
+    #method to handle good html requests. tries to read file and if file does not exist calls bad request method
     def good_request_html(self,data):
         f = read_index(data)
         if f == False:
@@ -76,6 +78,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
         self.request.sendall(bytearray('Content-Type: text/html\r\n','utf-8'))
         self.request.sendall(bytearray(f,'utf-8'))
 
+    #good request for CSS sends correct header
     def good_request_css(self,data):
         f = read_index(data)
         if f == False:
@@ -85,11 +88,12 @@ class MyWebServer(socketserver.BaseRequestHandler):
         self.request.sendall(bytearray('Content-Type: text/css\r\n','utf-8'))
         self.request.sendall(bytearray(f,'utf-8'))
     
+    #sends 404 if bad request is sent
     def bad_request(self):
-        print("BAD REQUEST")
         self.request.sendall(bytearray('HTTP/1.1 404 Not Found\r\n','utf-8'))
         self.request.sendall(bytearray('Connection: close\r\n', 'utf-8'))
 
+#loads index HTML files
 def read_index(location):
     location = './www'+location.decode("utf-8")
     if '..' in location:
@@ -101,7 +105,6 @@ def read_index(location):
         f.close()
         return html
     else:
-        print("BAD REQUEST IN READ INDEX")
         return False
 
 if __name__ == "__main__":
