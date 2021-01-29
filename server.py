@@ -34,20 +34,12 @@ class MyWebServer(socketserver.BaseRequestHandler):
         self.data = self.request.recv(1024).strip()
         #print ("Got a request of: %s\n" % self.data)
         data = self.data.split()
-        print(data)
-        #f = read_index_html("./www")
-        #self.request.sendall(f)
         if data[0].decode("utf-8") != 'GET':
             self.bad_request_method()
         elif data[1].decode("utf-8")[-1] == '/':
             self.good_request_html(data[1]+(b'index.html'))
         elif '.css' not in data[1].decode("utf-8") and '.html' not in data[1].decode("utf-8") and data[1].decode("utf-8")[-1] != '/':
             self.redirect_request(data)
-        #if data[1].decode("utf-8") == '/':
-        #    print("entered '/' request ")
-        #    self.good_request_html(b'/index.html')
-        #elif data[1].decode("utf-8") == '/deep/':
-        #    self.good_request_html(b'/deep/index.html')
         elif data[1].decode("utf-8") == "favicon.ico": #need to do this better
             self.request.sendall(bytearray('HTTP/1.1 200 OK\r\n','utf-8'))
         elif ".css" in data[1].decode("utf-8"):
