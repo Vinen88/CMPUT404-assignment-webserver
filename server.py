@@ -37,18 +37,21 @@ class MyWebServer(socketserver.BaseRequestHandler):
         print(data)
         #f = read_index_html("./www")
         #self.request.sendall(f)
-        if data[1].decode("utf-8") == '/':
-            print("entered '/' request ")
-            self.good_request_html(b'/index.html')
-        elif data[1].decode("utf-8") == "favicon.ico":
+        if data[1].decode("utf-8")[-1] == '/':
+            self.good_request_html(data[1]+(b'index.html'))
+        #if data[1].decode("utf-8") == '/':
+        #    print("entered '/' request ")
+        #    self.good_request_html(b'/index.html')
+        #elif data[1].decode("utf-8") == '/deep/':
+        #    self.good_request_html(b'/deep/index.html')
+        elif data[1].decode("utf-8") == "favicon.ico": #need to do this better
             self.request.sendall(bytearray('HTTP/1.1 200 OK\r\n','utf-8'))
-        try: #I #1 coder (I'm so sorry for doing this, I hope I have time to do it right)
-            if data[1].decode("utf-8").split('.')[1] == 'css':
-                self.good_request_css(data[1])
-        except:
-            pass
-        else:
+        elif ".css" in data[1].decode("utf-8"):
+            self.good_request_css(data[1])
+        elif ".html" in data[1].decode("utf-8"):
             self.good_request_html(data[1])
+        else:
+            self.bad_request()
 
     def good_request_html(self,data):
         f = read_index(data)
@@ -75,6 +78,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
 def read_index(location):
     location = './www'+location.decode("utf-8")
+    if '..' in location:
+        return False
     print(location)
     if os.path.isfile(location):
         f = open(location, 'r')
